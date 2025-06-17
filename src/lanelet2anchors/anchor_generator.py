@@ -8,8 +8,10 @@ from lanelet2.io import Origin
 from lanelet2.matching import getDeterministicMatches, getProbabilisticMatches
 from lanelet2.projection import UtmProjector
 from shapely.geometry import LineString
+from lanelet2.core import Lanelet
 
 from .anchor_generation import Anchor, create_anchors_for_lanelet
+from .anchor_generation.discover_anchors import discover_lanelets
 from .anchor_tools.interpolate_lanelet import interpolate_lanelet
 from .anchor_tools.lanelet_matching import (
     LaneletAnchorMatches,
@@ -79,6 +81,20 @@ class AnchorGenerator:
             max_length=anchor_length,
             distance_method=distance_method,
         )
+
+    def get_reachable_lanelets_from(
+        self,
+        lanelet_id: int,
+        max_length: float = 100,
+    ) -> List[Lanelet]:
+        start_lanelet = self.lanelet_map.laneletLayer[lanelet_id]
+        reachable_lanelets = discover_lanelets(
+            routing_graph=self.routing_graph,
+            start_lanelet=start_lanelet,
+            max_length=max_length,
+        )
+
+        return reachable_lanelets
 
     def interpolate_lanelet(
         self,
@@ -221,3 +237,37 @@ class AnchorGenerator:
                 )
             )
         return anchor_paths
+
+    def get_reachable_lanelets_for_vehicle(
+            self,
+            vehicle_pose: VehiclePose,
+            max_length: float = 100,
+            probabilitisc_matching: bool = True,
+    ) -> List[List[Lanelet]]:
+        """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
+
+        Args:
+            vehicle_pose (VehiclePose): Position and orientation of the considered vehicle
+            max_length (float, optional): Desired length of the anchor in meters. Start lanelet is NOT included. Note: Anchors can have a length shorter than length, if there is a dead end. Defaults to 100.
+            probabilitisc_matching (bool, optional): Whether the matching of the vehicle onto the Lanelet is probabilistic or deterministic. Defaults to True.
+
+        Returns:
+            List[List[Lanelet]]: List of reachable lanelets for each matching starting Lanelet (according to vehicle_pose)
+        """
+        if probabilitisc_matching:
+            lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
+                vehicle_pose
+            )
+        else:
+            lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
+                vehicle_pose
+            )
+
+        # Find all reachable lanelets from each of the match (regardless of probability)
+        reachable_lanelets = []
+        for ll_id in lanelet_matches.keys():
+            reachable_lanelets.append(
+                self.get_reachable_lanelets_from(lanelet_id=int(ll_id), max_length=max_length)
+            )
+
+        return reachable_lanelets

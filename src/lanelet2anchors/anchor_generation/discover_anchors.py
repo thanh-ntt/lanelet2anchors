@@ -6,6 +6,18 @@ from lanelet2.routing import RelationType, RoutingGraph
 
 from ..anchor_tools.anchor2linestring import _anchor2linestring
 
+def discover_lanelets(
+    routing_graph: RoutingGraph,
+    start_lanelet: Lanelet,
+    max_length: float,
+) -> List[Lanelet]:
+    G = nx.DiGraph()
+    G.add_node(0, lanelet=start_lanelet)
+    # G contains all reachable lanelets
+    _traverse_routing_graph(G, routing_graph, start_lanelet, 0, max_length)
+
+    return list(dict(G.nodes(data="lanelet")).values())
+
 
 def discover_anchors(
     routing_graph: RoutingGraph,
@@ -14,6 +26,7 @@ def discover_anchors(
 ) -> List[Tuple[Lanelet, ...]]:
     G = nx.DiGraph()
     G.add_node(0, lanelet=start_lanelet)
+    # G contains all reachable lanelets
     _traverse_routing_graph(G, routing_graph, start_lanelet, 0, max_length)
 
     anchors = _graph2anchors(G)
