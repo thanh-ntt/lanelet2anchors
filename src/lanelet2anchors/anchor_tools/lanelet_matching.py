@@ -157,7 +157,6 @@ class VehiclePose:
         vehicle_width: float,
         vehicle_length: float,
     ) -> "VehiclePose":
-        print(f'invoke from_nusc')
         bbox_init = np.array(
             [
                 [-vehicle_length / 2, vehicle_width / 2, 0],
