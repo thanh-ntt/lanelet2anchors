@@ -160,6 +160,7 @@ class AnchorGenerator:
     def match_vehicle_onto_lanelets_probabilistically(
         self,
         vehicle_pose: VehiclePose,
+        max_dist_to_lanelet: float = 0.5,
     ) -> Dict[str, LaneletMatchProb]:
         """Match vehicle onto lanelet probabilistically using Lanelet2 Matching.
 
@@ -174,7 +175,7 @@ class AnchorGenerator:
         lanelet_matches = getProbabilisticMatches(
             self.lanelet_map,
             vehicle_pose.as_object2d_with_covariance(self.matching_config),
-            self.matching_config.max_dist_to_lanelet,
+            np.double(max_dist_to_lanelet),
         )
 
         if len(lanelet_matches) != 0:
@@ -211,7 +212,8 @@ class AnchorGenerator:
         """
         if probabilitisc_matching:
             lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
-                vehicle_pose
+                vehicle_pose,
+                max_dist_to_lanelet
             )
         else:
             lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
@@ -265,7 +267,8 @@ class AnchorGenerator:
         """
         if probabilitisc_matching:
             lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
-                vehicle_pose
+                vehicle_pose,
+                max_dist_to_lanelet
             )
         else:
             lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
