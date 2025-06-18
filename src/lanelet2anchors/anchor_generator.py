@@ -134,6 +134,7 @@ class AnchorGenerator:
             Dict[str, LaneletMatchProb]: Mapping between lanelet ID and the lanelet match
         """
         mapping = {}
+        print(f'max_dist_to_lanelet: {max_dist_to_lanelet}')
         lanelet_matches = getDeterministicMatches(
             self.lanelet_map,
             vehicle_pose.as_object2d(),
@@ -207,7 +208,6 @@ class AnchorGenerator:
         Returns:
             Dict[str, LaneletAnchorMatches]: Mapping between the start Lanelet ID and the computed anchor paths
         """
-        print(f'create_anchors_for_vehicle invoked')
         if probabilitisc_matching:
             lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose
