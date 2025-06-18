@@ -122,6 +122,7 @@ class AnchorGenerator:
     def match_vehicle_onto_lanelets_deterministically(
         self,
         vehicle_pose: VehiclePose,
+        max_dist_to_lanelet: np.double = np.double(0.5),
     ) -> Dict[str, LaneletMatchProb]:
         """Match vehicle onto lanelet deterministically using Lanelet2 Matching.
 
@@ -135,7 +136,7 @@ class AnchorGenerator:
         lanelet_matches = getDeterministicMatches(
             self.lanelet_map,
             vehicle_pose.as_object2d(),
-            self.matching_config.max_dist_to_lanelet,
+            max_dist_to_lanelet,
         )
 
         # todo: fix getting unique matches only
@@ -191,6 +192,7 @@ class AnchorGenerator:
         anchor_length: float = 100,
         num_anchors: int = 5,
         probabilitisc_matching: bool = True,
+        max_dist_to_lanelet: np.double = np.double(0.5),
     ) -> List[LaneletAnchorMatches]:
         """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
 
@@ -209,7 +211,8 @@ class AnchorGenerator:
             )
         else:
             lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
-                vehicle_pose
+                vehicle_pose,
+                max_dist_to_lanelet
             )
         lanelet_probs = np.asarray([m.probability for m in lanelet_matches.values()])
         if len(lanelet_probs) == 0:
@@ -243,6 +246,7 @@ class AnchorGenerator:
             vehicle_pose: VehiclePose,
             max_length: float = 100,
             probabilitisc_matching: bool = True,
+            max_dist_to_lanelet: np.double = np.double(0.5),
     ) -> List[List[Lanelet]]:
         """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
 
@@ -260,7 +264,8 @@ class AnchorGenerator:
             )
         else:
             lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
-                vehicle_pose
+                vehicle_pose,
+                max_dist_to_lanelet
             )
 
         # Find all reachable lanelets from each of the match (regardless of probability)
