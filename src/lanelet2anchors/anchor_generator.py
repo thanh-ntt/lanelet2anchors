@@ -192,7 +192,7 @@ class AnchorGenerator:
         anchor_length: float = 100,
         num_anchors: int = 5,
         probabilitisc_matching: bool = True,
-        max_dist_to_lanelet: np.double = np.double(0.5),
+        max_dist_to_lanelet: float = 0.5,
     ) -> List[LaneletAnchorMatches]:
         """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
 
@@ -201,6 +201,7 @@ class AnchorGenerator:
             anchor_length (float, optional): Desired length of the anchor in meters. Start lanelet is NOT included. Note: Anchors can have a length shorter than length, if there is a dead end. Defaults to 100.
             num_anchors (int, optional): Number of anchor paths that should be computed. Defaults to 5.
             probabilitisc_matching (bool, optional): Whether the matching of the vehicle onto the Lanelet is probabilistic or deterministic. Defaults to True.
+            max_dist_to_lanelet (float, optional): Euclidean distance to which we find lanelets
 
         Returns:
             Dict[str, LaneletAnchorMatches]: Mapping between the start Lanelet ID and the computed anchor paths
@@ -254,6 +255,7 @@ class AnchorGenerator:
             vehicle_pose (VehiclePose): Position and orientation of the considered vehicle
             max_length (float, optional): Desired length of the anchor in meters. Start lanelet is NOT included. Note: Anchors can have a length shorter than length, if there is a dead end. Defaults to 100.
             probabilitisc_matching (bool, optional): Whether the matching of the vehicle onto the Lanelet is probabilistic or deterministic. Defaults to True.
+            max_dist_to_lanelet (float, optional): Euclidean distance to which we find lanelets
 
         Returns:
             List[List[Lanelet]]: List of reachable lanelets for each matching starting Lanelet (according to vehicle_pose)
