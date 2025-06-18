@@ -207,6 +207,7 @@ class AnchorGenerator:
         Returns:
             Dict[str, LaneletAnchorMatches]: Mapping between the start Lanelet ID and the computed anchor paths
         """
+        print(f'create_anchors_for_vehicle invoked')
         if probabilitisc_matching:
             lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose
