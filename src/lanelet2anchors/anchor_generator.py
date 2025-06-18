@@ -34,6 +34,7 @@ class AnchorGenerator:
         origin_latitude: float,
         origin_longitude: float,
     ) -> None:
+        print('init AnchorGenerator')
         origin = Origin(origin_latitude, origin_longitude)
         projector = UtmProjector(origin)
         traffic_rules = lanelet2.traffic_rules.create(
