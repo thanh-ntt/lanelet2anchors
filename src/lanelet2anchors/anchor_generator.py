@@ -122,12 +122,13 @@ class AnchorGenerator:
     def match_vehicle_onto_lanelets_deterministically(
         self,
         vehicle_pose: VehiclePose,
-        max_dist_to_lanelet: np.double = np.double(0.5),
+        max_dist_to_lanelet: float = 0.5,
     ) -> Dict[str, LaneletMatchProb]:
         """Match vehicle onto lanelet deterministically using Lanelet2 Matching.
 
         Args:
             vehicle_pose (VehiclePose): Pose of vehicle
+            max_dist_to_lanelet (float, optional): Euclidean distance to which we find lanelets
 
         Returns:
             Dict[str, LaneletMatchProb]: Mapping between lanelet ID and the lanelet match
@@ -136,7 +137,7 @@ class AnchorGenerator:
         lanelet_matches = getDeterministicMatches(
             self.lanelet_map,
             vehicle_pose.as_object2d(),
-            max_dist_to_lanelet,
+            np.double(max_dist_to_lanelet),
         )
 
         # todo: fix getting unique matches only
@@ -247,7 +248,7 @@ class AnchorGenerator:
             vehicle_pose: VehiclePose,
             max_length: float = 100,
             probabilitisc_matching: bool = True,
-            max_dist_to_lanelet: np.double = np.double(0.5),
+            max_dist_to_lanelet: float = 0.5,
     ) -> List[List[Lanelet]]:
         """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
 
