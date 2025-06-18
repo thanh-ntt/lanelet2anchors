@@ -135,8 +135,7 @@ class AnchorGenerator:
         lanelet_matches = getDeterministicMatches(
             self.lanelet_map,
             vehicle_pose.as_object2d(),
-            # self.matching_config.max_dist_to_lanelet,
-            1
+            self.matching_config.max_dist_to_lanelet,
         )
 
         # todo: fix getting unique matches only
