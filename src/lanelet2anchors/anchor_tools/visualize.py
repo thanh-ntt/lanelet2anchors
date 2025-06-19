@@ -123,7 +123,7 @@ def plot_matched_lanelets(
         ax.text(
             polygon.centroid.x,
             polygon.centroid.y,
-            f"{round(lanelet_match_prob.lanelet_match.probability * 100)}%",
+            f"{round(lanelet_match_prob.probability * 100)}%",
         )
 
 
