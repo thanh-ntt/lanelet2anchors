@@ -117,6 +117,7 @@ def plot_matched_lanelets(
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
+    ax.fill(*bbox_car.exterior.xy, color="red", linewidth=5)
     for lanelet_match_prob in matched_lanelets:
         polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
         ax.plot(*polygon.exterior.xy, alpha=0.7, label=f"Start lanelet")
