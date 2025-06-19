@@ -11,8 +11,9 @@ from shapely.geometry import GeometryCollection, LineString, Point, Polygon
 
 from ..anchor_generation.anchor import Anchor
 from ..anchor_tools.anchor2polygon import anchor2polygon
-from ..anchor_tools.lanelet_matching import LaneletAnchorMatches, VehiclePose
+from ..anchor_tools.lanelet_matching import LaneletAnchorMatches, VehiclePose, LaneletMatchProb
 from .anchor2linestring import anchor2linestring
+from lanelet2.core import Lanelet
 
 ROOT = Path(__file__).parent.parent.parent.parent
 
@@ -92,6 +93,38 @@ def plot_trajectory_and_anchors(
     if vis_type in ["gt_dmap", "all_dmap"]:
         ax.plot(*gt_trajectory.xy, color="blue", linewidth=4)
     return fig, ax
+
+
+def plot_matched_lanelets(
+    vehicle_pose: VehiclePose,
+    matched_lanelets: List[LaneletMatchProb],
+    nusc_map: NuScenesMap,
+):
+    """Visualize vehicle, and matched lanelets
+
+    Args:
+        vehicle_pose (VehiclePose): vehicle pose
+        lanelet_match (LaneletMatchProb): Matched lanelet with assigned probability.
+        nusc_map (NuScenesMap): nuScenes map
+
+    Returns:
+        _type_: _description_
+    """
+    bbox_car = vehicle_pose.bbox_as_shapely_polygon()
+    obj = GeometryCollection([bbox_car])
+    bounds = _compute_render_bounds(obj)
+    bounds = [bound + 50 for bound in bounds]
+    fig, ax = _get_nusc_patch_within_bounds(
+        nusc_map, render_bounds=bounds
+    )
+    for lanelet_match_prob in matched_lanelets:
+        polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
+        ax.plot(*polygon.exterior.xy, label=f"Start lanelet")
+        ax.text(
+            polygon.centroid.x,
+            polygon.centroid.y,
+            f"{round(lanelet_match_prob.lanelet_match.probability * 100)}%",
+        )
 
 
 def _compute_render_bounds(obj):
