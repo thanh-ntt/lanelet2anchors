@@ -119,7 +119,7 @@ def plot_matched_lanelets(
     )
     for lanelet_match_prob in matched_lanelets:
         polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
-        ax.plot(*polygon.exterior.xy, label=f"Start lanelet")
+        ax.plot(*polygon.exterior.xy, alpha=0.7, label=f"Start lanelet")
         ax.text(
             polygon.centroid.x,
             polygon.centroid.y,
