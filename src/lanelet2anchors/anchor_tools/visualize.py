@@ -114,6 +114,8 @@ def plot_matched_lanelets(
     obj = GeometryCollection([bbox_car])
     bounds = _compute_render_bounds(obj)
     print(bounds)
+    bounds = [bounds[0] - 10, bounds[1] - 10, bounds[2] + 10, bounds[3] + 10]
+    print(bounds)
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
