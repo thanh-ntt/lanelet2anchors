@@ -281,13 +281,8 @@ class AnchorGenerator:
         vehicle_poses = [initial_vehicle_pose]
         prev_pose = initial_vehicle_pose
         for i, pred in enumerate(prediction):
-            if i == 0:
-                x_prev, y_prev = initial_vehicle_pose.x, initial_vehicle_pose.y
-            else:
-                x_prev, y_prev = prediction[i - 1][0], prediction[i - 1][1]
             x, y = pred[0], pred[1]
-            psi = np.arctan2(y - y_prev, x - x_prev)
-            print(f'new psi: {psi}')
+            psi = np.arctan2(y - prev_pose.y, x - prev_pose.x)
             bbox = rotate_bbox(prev_pose.bbox, np.array([prev_pose.x, prev_pose.y]), prev_pose.psi,
                                np.array([x, y]), psi)
             cur_pose = VehiclePose(x=x, y=y, psi=psi, bbox=bbox, length=length, width=width)
