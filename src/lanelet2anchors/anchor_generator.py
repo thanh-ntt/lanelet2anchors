@@ -274,7 +274,9 @@ class AnchorGenerator:
                     [length / 2, width / 2, 0],
                 ]
             )
-            psi = prev_psi + np.arctan2(x - x_prev, y - y_prev)
+            diff_psi = np.arctan2(x - x_prev, y - y_prev)
+            print(f'diff_psi: {diff_psi}')
+            psi = prev_psi + diff_psi
             c_psi = np.cos(psi)
             s_psi = np.sin(psi)
             R = np.array([[c_psi, -s_psi], [s_psi, c_psi]])
