@@ -136,10 +136,12 @@ def plot_trajectory_and_lanelets(
     ego_info: Dict[str, Any],
     gt_trajectory: LineString,
     prediction: List[VehiclePose],
+    matched_lanelets: List[List[LaneletMatchProb]],
     nusc_map: NuScenesMap,
 ):
+    assert len(prediction) == len(matched_lanelets) == 13
     x, y = ego_info['translation'][0], ego_info['translation'][1]
-    extend = 50
+    extend = 40
     bounds = [x - extend, y - extend, x + extend, y + extend]
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
@@ -151,7 +153,15 @@ def plot_trajectory_and_lanelets(
     ax.plot(*pred_trajectory.xy, color="red", linewidth=4, alpha=0.5)
     for i, vehicle_pose in enumerate(prediction):
         bbox_car = vehicle_pose.bbox_as_shapely_polygon()
-        ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=0.5)
+        ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
+
+        polygon = anchor2polygon(Anchor([matched_lanelets[i].lanelet_match.lanelet]))
+        ax.plot(*polygon.exterior.xy, color=colors[i], alpha=0.7)
+        ax.text(
+            polygon.centroid.x,
+            polygon.centroid.y,
+            f"{round(matched_lanelets[i].probability * 100)}%",
+        )
     return fig, ax
 
 
