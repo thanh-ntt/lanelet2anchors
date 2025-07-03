@@ -312,9 +312,12 @@ class AnchorGenerator:
             cur_lanelet_relations = []
             for prev_lanelet in lanelets[i - 1]:
                 for cur_lanelet in lanelets[i]:
-                    lanelet_relation = self.routing_graph.routingRelation(
-                        prev_lanelet.lanelet, cur_lanelet.lanelet, includeConflicting=True
-                    )
+                    if cur_lanelet.id == prev_lanelet.id:
+                        lanelet_relation = 'self'
+                    else:
+                        lanelet_relation = self.routing_graph.routingRelation(
+                            prev_lanelet.lanelet, cur_lanelet.lanelet, includeConflicting=True
+                        )
                     cur_lanelet_relations.append(lanelet_relation)
             lanelet_relations.append(cur_lanelet_relations)
         return lanelet_relations
