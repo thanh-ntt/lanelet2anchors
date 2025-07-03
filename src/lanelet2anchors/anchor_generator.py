@@ -269,15 +269,7 @@ class AnchorGenerator:
             c_psi = np.cos(psi)
             s_psi = np.sin(psi)
             R = np.array([[c_psi, -s_psi], [s_psi, c_psi]])
-            bbox_init = np.array(
-                [
-                    [-length / 2, width / 2, 0],
-                    [-length / 2, -width / 2, 0],
-                    [length / 2, -width / 2, 0],
-                    [length / 2, width / 2, 0],
-                ]
-            )
-            bbox = np.dot(R, bbox_init[:, :2].T).T
+            bbox = np.dot(R, initial_vehicle_pose.bbox[:, :2].T).T
             bbox[:, 0] += x
             bbox[:, 1] += y
             vehicle_poses.append(
