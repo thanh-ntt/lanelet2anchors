@@ -135,7 +135,7 @@ def plot_trajectory_and_lanelets(
     nusc_map: NuScenesMap,
 ):
     x, y = ego_info['translation'][0], ego_info['translation'][1]
-    bounds = [x - 30, y - 30, x + 30, y + 30]
+    bounds = [x - 300, y - 300, x + 300, y + 300]
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
