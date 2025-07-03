@@ -254,6 +254,26 @@ class AnchorGenerator:
             ego_info,
             prediction, # [H, 2]
     ) -> List[VehiclePose]:
+        def rotate_bbox(bbox_points, center_old, psi_old, center_new, psi_new):
+            # Translate bbox to origin
+            shifted = bbox_points - center_old
+
+            # Undo original rotation
+            c0, s0 = np.cos(-psi_old), np.sin(-psi_old)
+            R0_inv = np.array([[c0, -s0],
+                               [s0, c0]])
+            unrotated = shifted @ R0_inv.T
+
+            # Apply new rotation
+            c1, s1 = np.cos(psi_new), np.sin(psi_new)
+            R1 = np.array([[c1, -s1],
+                           [s1, c1]])
+            rotated = unrotated @ R1.T
+
+            # Translate to new position
+            new_bbox = rotated + center_new
+            return new_bbox
+
         width, length, _ = ego_info["size"]
         initial_vehicle_pose = VehiclePose.from_nusc(
             ego_info['translation'][0], ego_info['translation'][1], ego_info['rotation'], width, length
@@ -266,15 +286,10 @@ class AnchorGenerator:
             else:
                 x_prev, y_prev = prediction[i - 1][0], prediction[i - 1][1]
             x, y = pred[0], pred[1]
-            diff_psi = np.arctan2(x - x_prev, y - y_prev)
-            print(f'diff_psi: {diff_psi}')
-            psi = diff_psi
-            c_psi, s_psi = np.cos(psi), np.sin(psi)
-            R = np.array([[c_psi, -s_psi], [s_psi, c_psi]])
-
-            bbox = np.dot(R, prev_pose.bbox[:, :2].T).T
-            bbox[:, 0] += x
-            bbox[:, 1] += y
+            psi = np.arctan2(x - x_prev, y - y_prev)
+            print(f'new psi: {psi}')
+            bbox = rotate_bbox(prev_pose.bbox, np.array([prev_pose.x, prev_pose.y]), prev_pose.psi,
+                               np.array([x, y]), psi)
             cur_pose = VehiclePose(x=x, y=y, psi=psi, bbox=bbox, length=length, width=width)
             vehicle_poses.append(cur_pose)
             prev_pose = cur_pose
