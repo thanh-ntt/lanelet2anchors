@@ -130,7 +130,8 @@ def plot_matched_lanelets(
 
 def plot_trajectory_and_lanelets(
     ego_info: Dict[str, Any],
-    trajectory: List[VehiclePose],
+    gt_trajectory: LineString,
+    prediction: List[VehiclePose],
     nusc_map: NuScenesMap,
 ):
     x, y = ego_info['translation'][0], ego_info['translation'][1]
@@ -138,7 +139,8 @@ def plot_trajectory_and_lanelets(
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
-    for vehicle_pose in trajectory:
+    ax.plot(*gt_trajectory.xy, color="blue", linewidth=4)
+    for vehicle_pose in prediction:
         bbox_car = vehicle_pose.bbox_as_shapely_polygon()
         ax.fill(*bbox_car.exterior.xy, color="red", linewidth=5, alpha=0.5)
     return fig, ax
