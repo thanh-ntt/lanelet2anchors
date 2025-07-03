@@ -259,22 +259,33 @@ class AnchorGenerator:
             ego_info['translation'][0], ego_info['translation'][1], ego_info['rotation'], width, length
         )
         vehicle_poses = [initial_vehicle_pose]
+        prev_psi = initial_vehicle_pose.psi
         for i, pred in enumerate(prediction):
             if i == 0:
                 x_prev, y_prev = initial_vehicle_pose.x, initial_vehicle_pose.y
             else:
                 x_prev, y_prev = prediction[i - 1][0], prediction[i - 1][1]
             x, y = pred[0], pred[1]
-            psi = np.arctan2(x - x_prev, y - y_prev)
+            bbox_init = np.array(
+                [
+                    [-length / 2, width / 2, 0],
+                    [-length / 2, -width / 2, 0],
+                    [length / 2, -width / 2, 0],
+                    [length / 2, width / 2, 0],
+                ]
+            )
+            psi = prev_psi + np.arctan2(x - x_prev, y - y_prev)
             c_psi = np.cos(psi)
             s_psi = np.sin(psi)
             R = np.array([[c_psi, -s_psi], [s_psi, c_psi]])
-            bbox = np.dot(R, initial_vehicle_pose.bbox[:, :2].T).T
-            bbox[:, 0] += x - x_prev
-            bbox[:, 1] += y - y_prev
+
+            bbox = np.dot(R, bbox_init[:, :2].T).T
+            bbox[:, 0] += x
+            bbox[:, 1] += y
             vehicle_poses.append(
                 VehiclePose(x=x, y=y, psi=psi, bbox=bbox, length=length, width=width)
             )
+            prev_psi = psi
         return vehicle_poses
 
     def get_matching_lanelets_from_vehicle_poses(

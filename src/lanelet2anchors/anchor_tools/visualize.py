@@ -135,7 +135,7 @@ def plot_trajectory_and_lanelets(
     nusc_map: NuScenesMap,
 ):
     x, y = ego_info['translation'][0], ego_info['translation'][1]
-    bounds = [x - 300, y - 300, x + 300, y + 300]
+    bounds = [x - 30, y - 30, x + 30, y + 30]
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
@@ -146,7 +146,7 @@ def plot_trajectory_and_lanelets(
     ax.plot(*pred_trajectory.xy, color="red", linewidth=4, alpha=0.5)
     for vehicle_pose in prediction:
         bbox_car = vehicle_pose.bbox_as_shapely_polygon()
-        print(f'bbox_car.exterior.xy: {bbox_car.exterior.xy}')
+        print(f'bbox_car: {bbox_car}')
         ax.fill(*bbox_car.exterior.xy, color="red", linewidth=5, alpha=0.5)
     return fig, ax
 
