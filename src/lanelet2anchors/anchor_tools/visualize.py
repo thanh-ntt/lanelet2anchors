@@ -158,12 +158,12 @@ def plot_trajectory_and_lanelets(
         for lanelet_match_prob in matched_lanelets[i]:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
             ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
-            if lanelet_match_prob.probability < 1:
-                ax.text(
-                    polygon.centroid.x,
-                    polygon.centroid.y,
-                    f"{round(lanelet_match_prob.probability * 100)}%",
-                )
+            ax.fill(*bbox_car.exterior.xy, color=colors[i], alpha=0.2)
+            ax.text(
+                polygon.centroid.x,
+                polygon.centroid.y,
+                f'{i}',
+            )
     return fig, ax
 
 
