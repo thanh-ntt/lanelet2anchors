@@ -147,7 +147,7 @@ def plot_trajectory_and_lanelets(
     for vehicle_pose in prediction:
         bbox_car = vehicle_pose.bbox_as_shapely_polygon()
         print(f'bbox_car: {bbox_car}')
-        ax.fill(*bbox_car.exterior.xy, color="red", linewidth=5, alpha=0.5)
+        ax.plot(*bbox_car.exterior.xy, color="red", linewidth=5, alpha=0.5)
     return fig, ax
 
 
