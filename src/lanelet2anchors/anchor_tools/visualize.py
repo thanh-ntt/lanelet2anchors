@@ -155,13 +155,14 @@ def plot_trajectory_and_lanelets(
         bbox_car = vehicle_pose.bbox_as_shapely_polygon()
         ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
 
-        polygon = anchor2polygon(Anchor([matched_lanelets[i].lanelet_match.lanelet]))
-        ax.plot(*polygon.exterior.xy, color=colors[i], alpha=0.7)
-        ax.text(
-            polygon.centroid.x,
-            polygon.centroid.y,
-            f"{round(matched_lanelets[i].probability * 100)}%",
-        )
+        for lanelet_match_prob in matched_lanelets[i]:
+            polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
+            ax.plot(*polygon.exterior.xy, color=colors[i], alpha=0.7)
+            ax.text(
+                polygon.centroid.x,
+                polygon.centroid.y,
+                f"{round(lanelet_match_prob.probability * 100)}%",
+            )
     return fig, ax
 
 
