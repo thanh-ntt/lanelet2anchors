@@ -9,6 +9,7 @@ from lanelet2.matching import getDeterministicMatches, getProbabilisticMatches
 from lanelet2.projection import UtmProjector
 from shapely.geometry import LineString
 from lanelet2.core import Lanelet
+from lanelet2.routing import RoutingGraph, LaneletRelation
 
 from .anchor_generation import Anchor, create_anchors_for_lanelet
 from .anchor_generation.discover_anchors import discover_lanelets
@@ -247,6 +248,139 @@ class AnchorGenerator:
                 )
             )
         return anchor_paths
+
+    @staticmethod
+    def prediction_to_vehicle_poses(
+            ego_info,
+            prediction, # [H, 2]
+    ) -> List[VehiclePose]:
+        width, length, _ = ego_info["size"]
+        initial_vehicle_pose = VehiclePose.from_nusc(
+            ego_info['translation'][0], ego_info['translation'][1], ego_info['rotation'], width, length
+        )
+        vehicle_poses = [initial_vehicle_pose]
+        for i, pred in enumerate(prediction):
+            if i == 0:
+                x_prev, y_prev = initial_vehicle_pose.x, initial_vehicle_pose.y
+            else:
+                x_prev, y_prev = prediction[i - 1][0], prediction[i - 1][1]
+            x, y = pred[0], pred[1]
+            psi = np.arctan2(x - x_prev, y - y_prev)
+            c_psi = np.cos(psi)
+            s_psi = np.sin(psi)
+            R = np.array([[c_psi, -s_psi], [s_psi, c_psi]])
+            bbox_init = np.array(
+                [
+                    [-length / 2, width / 2, 0],
+                    [-length / 2, -width / 2, 0],
+                    [length / 2, -width / 2, 0],
+                    [length / 2, width / 2, 0],
+                ]
+            )
+            bbox = np.dot(R, bbox_init[:, :2].T).T
+            bbox[:, 0] += x
+            bbox[:, 1] += y
+            vehicle_poses.append(
+                VehiclePose(x=x, y=y, psi=psi, bbox=bbox, length=length, width=width)
+            )
+        return vehicle_poses
+
+    def get_matching_lanelets_from_vehicle_poses(
+            self,
+            vehicle_poses
+    ) -> List[List[LaneletMatchProb]]:
+        # Usage:
+        # vehicle_poses = self.prediction_to_vehicle_poses(ego_info, prediction)
+        # TODO: weighted vehicle poses based on prob
+        assert len(vehicle_poses) == 13
+        matching_lanelets = []
+        for vehicle_pose in vehicle_poses:
+            cur_pose_matched_lanelet = self.match_vehicle_onto_lanelets_probabilistically(
+                vehicle_pose,
+                max_dist_to_lanelet=0.5,
+            )
+            matching_lanelets.append(list(cur_pose_matched_lanelet.values()))
+        return matching_lanelets
+
+    def get_lanelet_relations_from_lanelets(
+            self,
+            lanelets,
+    ):
+        lanelet_relations = []
+        for i in range(1, len(lanelets)):
+            cur_lanelet_relations = []
+            for prev_lanelet in lanelets[i - 1]:
+                for cur_lanelet in lanelets[i]:
+                    lanelet_relation = self.routing_graph.routingRelation(
+                        prev_lanelet.lanelet, cur_lanelet.lanelet, includeConflicting=True
+                    )
+                    cur_lanelet_relations.append(lanelet_relation)
+            lanelet_relations.append(cur_lanelet_relations)
+        return lanelet_relations
+
+    def check_rules_for_prediction(
+            self,
+            initial_position,
+            prediction,
+            rules: List[str]
+    ):
+        """Check for each rule in the list
+
+        Args:
+
+        Returns:
+            Dict[str, List[float]]: mapping from each rule to a list of values corresponding
+            to the rule violation level of each vehicle pose (waypoint).
+        """
+        vehicle_poses = self.prediction_to_vehicle_poses(prediction) # TODO: weighted vehicle poses based on prob
+        prediction_lanelets = []
+        for vehicle_pose in vehicle_poses:
+            matching_lanelets = self.match_vehicle_onto_lanelets_probabilistically(
+                vehicle_pose,
+                max_dist_to_lanelet = 0.5,
+            )
+            prediction_lanelets.append(list(matching_lanelets.values()))
+
+        assert len(prediction_lanelets) == 12 # predicts next 6s (12 frames)
+        rule_violations = {
+            'lane_direction': [],
+            'off_road': [],
+            'lane_change': [],
+        }
+        lanelet_relations = []
+        for i in range(len(prediction_lanelets)):
+            rule_violation = {
+                'lane_direction': 0,
+                'off_road': 0,
+                'lane_change': 0
+            }
+            prev_lanelets = prediction_lanelets[i - 1] if i > 0 else initial_position
+            cur_lanelets = prediction_lanelets[i]
+            num_permutations = len(prev_lanelets) * len(cur_lanelets)
+            if num_permutations == 0:
+                rule_violation['off_road'] = 1.0
+            cur_lanelet_relations = []
+            for prev_lanelet in prev_lanelets:
+                for cur_lanelet in cur_lanelets:
+                    lanelet_relation = self.routing_graph.routingRelation(
+                        prev_lanelet.lanelet, cur_lanelet.lanelet, includeConflicting=True
+                    )
+                    cur_lanelet_relations.append(lanelet_relation)
+            lanelet_relations.append(cur_lanelet_relations)
+        print(f'lanelet relations: {lanelet_relations}')
+        pass
+
+        # TODO:
+        # Find all matching lanelets for each waypoint (with probability)
+        # Check rules for [prev_lanelet, cur_lanelet] for each permutation, if violate, value = 1.0
+        #   => (if 2+ lanelets) take weighted sum of all permutation (using probability of the matching lanelet)
+        #   => rule violation level
+        #
+        #   3 cases:
+        #       no cur_lanelet => rule_1 = 0.0, rule_2 = 1.0, rule_3 = 0.0
+        #       [prev_lanelet, cur_lanelet] not neighbor <= TODO: check neighborhood relationship
+
+        # TODO #2: check rule for all 5 predictions
 
     def get_reachable_lanelets_for_vehicle(
             self,
