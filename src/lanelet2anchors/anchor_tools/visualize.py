@@ -17,6 +17,10 @@ from lanelet2.core import Lanelet
 
 ROOT = Path(__file__).parent.parent.parent.parent
 
+colors = [
+    'red', 'blue', 'green', 'orange', 'purple', 'cyan', 'magenta',
+    'lime', 'navy', 'yellow', 'teal', 'pink', 'brown'
+]
 
 def plot_trajectory_and_anchors(
     gt_trajectory: LineString,
@@ -145,9 +149,9 @@ def plot_trajectory_and_lanelets(
         [Point(pose.x, pose.y) for pose in prediction]
     )
     ax.plot(*pred_trajectory.xy, color="red", linewidth=4, alpha=0.5)
-    for vehicle_pose in prediction:
+    for i, vehicle_pose in enumerate(prediction):
         bbox_car = vehicle_pose.bbox_as_shapely_polygon()
-        ax.plot(*bbox_car.exterior.xy, color="red", linewidth=2, alpha=0.5)
+        ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=0.5)
     return fig, ax
 
 
