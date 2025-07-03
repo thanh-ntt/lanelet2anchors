@@ -172,7 +172,6 @@ class AnchorGenerator:
             Dict[str, LaneletMatchProb]: Mapping between lanelet ID and the lanelet match
         """
         mapping = {}
-        print(f'match_vehicle_onto_lanelets_probabilistically, max_dist_to_lanelet: {max_dist_to_lanelet}')
 
         lanelet_matches = getProbabilisticMatches(
             self.lanelet_map,
@@ -294,9 +293,6 @@ class AnchorGenerator:
             self,
             vehicle_poses
     ) -> List[List[LaneletMatchProb]]:
-        # Usage:
-        # vehicle_poses = self.prediction_to_vehicle_poses(ego_info, prediction)
-        # TODO: weighted vehicle poses based on prob
         assert len(vehicle_poses) == 13
         matching_lanelets = []
         for vehicle_pose in vehicle_poses:
@@ -309,7 +305,7 @@ class AnchorGenerator:
 
     def get_lanelet_relations_from_lanelets(
             self,
-            lanelets,
+            lanelets: List[List[LaneletMatchProb]],
     ):
         lanelet_relations = []
         for i in range(1, len(lanelets)):
