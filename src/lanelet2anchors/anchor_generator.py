@@ -286,7 +286,7 @@ class AnchorGenerator:
             else:
                 x_prev, y_prev = prediction[i - 1][0], prediction[i - 1][1]
             x, y = pred[0], pred[1]
-            psi = np.arctan2(x - x_prev, y - y_prev)
+            psi = np.arctan2(y - y_prev, x - x_prev)
             print(f'new psi: {psi}')
             bbox = rotate_bbox(prev_pose.bbox, np.array([prev_pose.x, prev_pose.y]), prev_pose.psi,
                                np.array([x, y]), psi)
