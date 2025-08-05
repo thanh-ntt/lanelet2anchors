@@ -290,14 +290,15 @@ class AnchorGenerator:
 
     def get_matching_lanelets_from_vehicle_poses(
             self,
-            vehicle_poses
+            vehicle_poses,
+            max_dist_to_lanelet: float = 0.5,
     ) -> List[List[LaneletMatchProb]]:
         assert len(vehicle_poses) == 13
         matching_lanelets = []
         for vehicle_pose in vehicle_poses:
             cur_pose_matched_lanelet = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose,
-                max_dist_to_lanelet=0.5,
+                max_dist_to_lanelet=max_dist_to_lanelet,
             )
             matching_lanelets.append(list(cur_pose_matched_lanelet.values()))
         return matching_lanelets
