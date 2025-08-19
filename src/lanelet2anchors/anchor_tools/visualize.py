@@ -132,6 +132,39 @@ def plot_matched_lanelets(
         )
 
 
+def plot_matched_lanelet(
+    ego_info: Dict[str, Any],
+    poses: List[VehiclePose],
+    matched_lanelets: List[List[LaneletMatchProb]],
+    nusc_map: NuScenesMap,
+):
+    assert len(poses) == len(matched_lanelets) == 13
+    x, y = ego_info['translation'][0], ego_info['translation'][1]
+    extend = 40
+    bounds = [x - extend, y - extend, x + extend, y + extend]
+    fig, ax = _get_nusc_patch_within_bounds(
+        nusc_map, render_bounds=bounds
+    )
+    trajectory = LineString(
+        [Point(pose.x, pose.y) for pose in poses]
+    )
+    ax.scatter(*trajectory.xy, color="red", linewidth=2, alpha=0.5)
+    plotted_polygons = []
+    for i, vehicle_pose in enumerate(poses):
+        for lanelet_match_prob in matched_lanelets[i]:
+            polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
+            if polygon not in plotted_polygons:
+                ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
+                ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
+                ax.text(
+                    polygon.centroid.x,
+                    polygon.centroid.y,
+                    f'{i}',
+                )
+                plotted_polygons.append(polygon)
+    return fig, ax
+
+
 def plot_trajectory_and_lanelets(
     ego_info: Dict[str, Any],
     gt_trajectory: LineString,
@@ -146,27 +179,24 @@ def plot_trajectory_and_lanelets(
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
-    ax.scatter(*gt_trajectory.xy, color="blue", linewidth=3)
+    ax.plot(*gt_trajectory.xy, color="blue", linewidth=3)
     pred_trajectory = LineString(
         [Point(pose.x, pose.y) for pose in prediction]
     )
-    ax.scatter(*pred_trajectory.xy, color="red", linewidth=3, alpha=0.5)
-    plotted_polygons = []
+    ax.plot(*pred_trajectory.xy, color="red", linewidth=3, alpha=0.5)
     for i, vehicle_pose in enumerate(prediction):
-        # bbox_car = vehicle_pose.bbox_as_shapely_polygon()
-        # ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
+        bbox_car = vehicle_pose.bbox_as_shapely_polygon()
+        ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
 
         for lanelet_match_prob in matched_lanelets[i]:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
-            if polygon not in plotted_polygons:
-                ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
-                ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
-                ax.text(
-                    polygon.centroid.x,
-                    polygon.centroid.y,
-                    f'{i}',
-                )
-                plotted_polygons.append(polygon)
+            ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
+            ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
+            ax.text(
+                polygon.centroid.x,
+                polygon.centroid.y,
+                f'{i}',
+            )
     return fig, ax
 
 
