@@ -151,19 +151,22 @@ def plot_trajectory_and_lanelets(
         [Point(pose.x, pose.y) for pose in prediction]
     )
     ax.plot(*pred_trajectory.xy, color="red", linewidth=3, alpha=0.5)
+    plotted_polygons = set()
     for i, vehicle_pose in enumerate(prediction):
-        bbox_car = vehicle_pose.bbox_as_shapely_polygon()
-        ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
+        # bbox_car = vehicle_pose.bbox_as_shapely_polygon()
+        # ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
 
         for lanelet_match_prob in matched_lanelets[i]:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
-            ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
-            ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
-            ax.text(
-                polygon.centroid.x,
-                polygon.centroid.y,
-                f'{i}',
-            )
+            if polygon not in plotted_polygons:
+                ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
+                ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
+                ax.text(
+                    polygon.centroid.x,
+                    polygon.centroid.y,
+                    f'{i}',
+                )
+                plotted_polygons.add(polygon)
     return fig, ax
 
 
