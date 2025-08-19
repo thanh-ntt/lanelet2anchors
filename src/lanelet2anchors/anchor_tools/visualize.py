@@ -146,11 +146,11 @@ def plot_trajectory_and_lanelets(
     fig, ax = _get_nusc_patch_within_bounds(
         nusc_map, render_bounds=bounds
     )
-    ax.plot(*gt_trajectory.xy, color="blue", linewidth=3)
+    ax.scatter(*gt_trajectory.xy, color="blue", linewidth=3)
     pred_trajectory = LineString(
         [Point(pose.x, pose.y) for pose in prediction]
     )
-    ax.plot(*pred_trajectory.xy, color="red", linewidth=3, alpha=0.5)
+    ax.scatter(*pred_trajectory.xy, color="red", linewidth=3, alpha=0.5)
     plotted_polygons = []
     for i, vehicle_pose in enumerate(prediction):
         # bbox_car = vehicle_pose.bbox_as_shapely_polygon()
