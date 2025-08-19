@@ -151,7 +151,7 @@ def plot_trajectory_and_lanelets(
         [Point(pose.x, pose.y) for pose in prediction]
     )
     ax.plot(*pred_trajectory.xy, color="red", linewidth=3, alpha=0.5)
-    plotted_polygons = set()
+    plotted_polygons = []
     for i, vehicle_pose in enumerate(prediction):
         # bbox_car = vehicle_pose.bbox_as_shapely_polygon()
         # ax.plot(*bbox_car.exterior.xy, color=colors[i], linewidth=2, alpha=1)
@@ -166,7 +166,7 @@ def plot_trajectory_and_lanelets(
                     polygon.centroid.y,
                     f'{i}',
                 )
-                plotted_polygons.add(polygon)
+                plotted_polygons.append(polygon)
     return fig, ax
 
 
