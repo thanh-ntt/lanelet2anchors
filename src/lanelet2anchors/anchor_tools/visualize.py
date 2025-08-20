@@ -5,10 +5,14 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import transforms
+from nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
 from PIL import Image
+from nuscenes.prediction import PredictHelper
 from shapely.geometry import GeometryCollection, LineString, Point, Polygon
 
+from .nusc import NUSC_ORIGIN_MAP
+from .. import AnchorGenerator
 from ..anchor_generation.anchor import Anchor
 from ..anchor_tools.anchor2polygon import anchor2polygon
 from ..anchor_tools.lanelet_matching import LaneletAnchorMatches, VehiclePose, LaneletMatchProb
@@ -130,6 +134,33 @@ def plot_matched_lanelets(
             polygon.centroid.y,
             f"{round(lanelet_match_prob.probability * 100)}%",
         )
+
+
+def generate_matched_lanelet_images(
+        i_t,
+        s_t,
+        pred,
+):
+    nusc_root = "/scratch/e0196773/data/nuScenes_trainval_meta_v1.0"
+    nusc = NuScenes("v1.0-trainval", dataroot=str(nusc_root))
+    helper = PredictHelper(nusc)
+    ego_info = helper.get_sample_annotation(i_t, s_t)
+    scene_token = nusc.get("sample", ego_info["sample_token"])["scene_token"]
+    map_name = nusc.get("log", nusc.get("scene", scene_token)["log_token"])["location"]
+    ll_map = AnchorGenerator(f"/home/svu/e0196773/lanelet2anchors/osm_files/{map_name}.osm", *NUSC_ORIGIN_MAP[map_name])
+    nusc_map = NuScenesMap(dataroot=nusc_root, map_name=map_name)
+
+    images = []
+    for i, a_pred in enumerate(pred):
+        vehicle_poses = AnchorGenerator.prediction_to_vehicle_poses(ego_info, a_pred)
+        matching_lanelets = ll_map.get_matching_lanelets_from_vehicle_poses(vehicle_poses)
+        fig, ax = plot_matched_lanelet(ego_info, vehicle_poses, matching_lanelets, nusc_map)
+        fig.canvas.draw()
+        image_from_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        image_from_plot = image_from_plot.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        images.append(image_from_plot)
+
+    return images
 
 
 def plot_matched_lanelet(
