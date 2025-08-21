@@ -151,8 +151,8 @@ def generate_matched_lanelet_images(
     nusc_map = NuScenesMap(dataroot=nusc_root, map_name=map_name)
 
     images = []
-    for i, a_pred in enumerate(pred):
-        vehicle_poses = AnchorGenerator.prediction_to_vehicle_poses(ego_info, a_pred)
+    for mode in pred:
+        vehicle_poses = AnchorGenerator.prediction_to_vehicle_poses(ego_info, mode)
         matching_lanelets = ll_map.get_matching_lanelets_from_vehicle_poses(vehicle_poses)
         fig, ax = plot_matched_lanelet(ego_info, vehicle_poses, matching_lanelets, nusc_map)
         fig.canvas.draw()
@@ -180,11 +180,11 @@ def plot_matched_lanelet(
         [Point(pose.x, pose.y) for pose in poses]
     )
     ax.scatter(*trajectory.xy, color="red", linewidth=2, alpha=0.5)
-    plotted_polygons = []
-    for i, vehicle_pose in enumerate(poses):
-        for lanelet_match_prob in matched_lanelets[i]:
+    prev_polygon = None
+    for i, pose_matched_ll in enumerate(matched_lanelets):
+        for lanelet_match_prob in pose_matched_ll:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
-            if polygon not in plotted_polygons:
+            if polygon != prev_polygon:
                 ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
                 ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
                 ax.text(
@@ -192,7 +192,8 @@ def plot_matched_lanelet(
                     polygon.centroid.y,
                     f'{i}',
                 )
-                plotted_polygons.append(polygon)
+                prev_polygon = polygon
+
     return fig, ax
 
 
