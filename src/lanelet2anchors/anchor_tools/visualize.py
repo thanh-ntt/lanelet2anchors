@@ -186,7 +186,7 @@ def plot_matched_lanelet(
     for i, vehicle_pose in enumerate(poses):
         for lanelet_match_prob in matched_lanelets[i]:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
-            if polygon not in plotted_polygons:
+            if any(p[0] == polygon for p in plotted_polygons):
                 plotted_polygons.append((polygon, [i]))
             else:
                 polygon_i = [i for i, x in enumerate(plotted_polygons) if x == polygon][0]
