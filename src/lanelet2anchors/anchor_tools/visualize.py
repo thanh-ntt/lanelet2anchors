@@ -187,10 +187,10 @@ def plot_matched_lanelet(
         for lanelet_match_prob in matched_lanelets[i]:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
             if any(p[0] == polygon for p in plotted_polygons):
-                plotted_polygons.append((polygon, [i]))
-            else:
                 polygon_i = [i for i, x in enumerate(plotted_polygons) if x == polygon][0]
                 plotted_polygons[polygon_i][1].append(i)
+            else:
+                plotted_polygons.append((polygon, [i]))
 
     for polygon, indices in plotted_polygons:
         s = ",".join(
