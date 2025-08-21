@@ -18,6 +18,8 @@ from ..anchor_tools.anchor2polygon import anchor2polygon
 from ..anchor_tools.lanelet_matching import LaneletAnchorMatches, VehiclePose, LaneletMatchProb
 from .anchor2linestring import anchor2linestring
 from lanelet2.core import Lanelet
+from itertools import groupby
+
 
 ROOT = Path(__file__).parent.parent.parent.parent
 
@@ -180,20 +182,29 @@ def plot_matched_lanelet(
         [Point(pose.x, pose.y) for pose in poses]
     )
     ax.scatter(*trajectory.xy, color="red", linewidth=2, alpha=0.5)
-    prev_polygon = None
-    for i, pose_matched_ll in enumerate(matched_lanelets):
-        for lanelet_match_prob in pose_matched_ll:
+    plotted_polygons = []
+    for i, vehicle_pose in enumerate(poses):
+        for lanelet_match_prob in matched_lanelets[i]:
             polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
-            if polygon != prev_polygon:
-                ax.plot(*polygon.exterior.xy, color=colors[i], alpha=1, linewidth=1)
-                ax.fill(*polygon.exterior.xy, color=colors[i], alpha=0.1)
-                ax.text(
-                    polygon.centroid.x,
-                    polygon.centroid.y,
-                    f'{i}',
-                )
-                prev_polygon = polygon
+            if polygon not in plotted_polygons:
+                plotted_polygons.append((polygon, [i]))
+            else:
+                polygon_i = [i for i, x in enumerate(plotted_polygons) if x == polygon][0]
+                plotted_polygons[polygon_i][1].append(i)
 
+    for polygon, indices in plotted_polygons:
+        s = ",".join(
+            f"{g[0]}-{g[-1]}" if len(g) > 1 else str(g[0])
+            for _, grp in groupby(enumerate(indices), lambda x: x[0] - x[1])
+            for g in [[v for _, v in grp]]
+        )
+        ax.plot(*polygon.exterior.xy, color=colors[indices[0]], alpha=1, linewidth=1)
+        ax.fill(*polygon.exterior.xy, color=colors[indices[0]], alpha=0.1)
+        ax.text(
+            polygon.centroid.x,
+            polygon.centroid.y,
+            s,
+        )
     return fig, ax
 
 
