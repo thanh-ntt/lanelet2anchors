@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import transforms
+from itertools import groupby
 from nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
 from PIL import Image
@@ -18,7 +19,6 @@ from ..anchor_tools.anchor2polygon import anchor2polygon
 from ..anchor_tools.lanelet_matching import LaneletAnchorMatches, VehiclePose, LaneletMatchProb
 from .anchor2linestring import anchor2linestring
 from lanelet2.core import Lanelet
-from itertools import groupby
 
 
 ROOT = Path(__file__).parent.parent.parent.parent
