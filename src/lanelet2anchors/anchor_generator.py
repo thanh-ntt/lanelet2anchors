@@ -292,10 +292,11 @@ class AnchorGenerator:
             self,
             vehicle_poses,
             max_dist_to_lanelet: float = 0.5,
-    ) -> Tuple[List[List[str]], Dict[str, Dict[str, str]]]:
+    ) -> Tuple[List[List[str]], List[List], Dict[str, Dict[str, str]]]:
         """
         Returns:
             List of matching lanelet IDs corresponding to the vehicle poses
+            and list of matching lanelets
             and their relationship as an adjacency map (dictionary of dictionaries).
         """
         lanelet_ids, id2lanelet, ll_relation_mapping = [], {}, {}
@@ -316,7 +317,9 @@ class AnchorGenerator:
                     relation = self.routing_graph.routingRelation(u, v, includeConflicting=True)
                     ll_relation_mapping.setdefault(u_id, {})[v_id] = relation
 
-        return lanelet_ids, ll_relation_mapping
+        lanelets = [[id2lanelet[ll_id] for ll_id in pose_lanelets] for pose_lanelets in lanelet_ids]
+
+        return lanelet_ids, lanelets, ll_relation_mapping
 
     def get_matching_lanelets_from_vehicle_poses(
             self,

@@ -142,6 +142,7 @@ def generate_matched_lanelet_images(
         i_t,
         s_t,
         pred,
+        max_dist_to_lanelet=0.5,
 ):
     nusc_root = "/scratch/e0196773/data/nuScenes_trainval_meta_v1.0"
     nusc = NuScenes("v1.0-trainval", dataroot=str(nusc_root))
@@ -155,7 +156,7 @@ def generate_matched_lanelet_images(
     images = []
     for mode in pred:
         vehicle_poses = AnchorGenerator.prediction_to_vehicle_poses(ego_info, mode)
-        matching_lanelets = ll_map.get_matching_lanelets_from_vehicle_poses(vehicle_poses)
+        _, matching_lanelets, _ = ll_map.get_lanelet_and_relation_from_vehicle_poses(vehicle_poses, max_dist_to_lanelet)
         fig, ax = plot_matched_lanelet(ego_info, vehicle_poses, matching_lanelets, nusc_map)
         fig.canvas.draw()
         image_from_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
@@ -168,7 +169,7 @@ def generate_matched_lanelet_images(
 def plot_matched_lanelet(
     ego_info: Dict[str, Any],
     poses: List[VehiclePose],
-    matched_lanelets: List[List[LaneletMatchProb]],
+    matched_lanelets: List[List[Lanelet]],
     nusc_map: NuScenesMap,
 ):
     assert len(poses) == len(matched_lanelets) == 13
@@ -184,8 +185,8 @@ def plot_matched_lanelet(
     ax.scatter(*trajectory.xy, color="red", linewidth=2, alpha=0.5)
     plotted_polygons = []
     for i, vehicle_pose in enumerate(poses):
-        for lanelet_match_prob in matched_lanelets[i]:
-            polygon = anchor2polygon(Anchor([lanelet_match_prob.lanelet_match.lanelet]))
+        for lanelet in matched_lanelets[i]:
+            polygon = anchor2polygon(Anchor([lanelet]))
             if any(p[0] == polygon for p in plotted_polygons):
                 polygon_i = [i for i, x in enumerate(plotted_polygons) if x[0] == polygon][0]
                 plotted_polygons[polygon_i][1].append(i)
