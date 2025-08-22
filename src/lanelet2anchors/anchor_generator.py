@@ -1,6 +1,6 @@
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 import lanelet2
 import numpy as np
@@ -287,6 +287,36 @@ class AnchorGenerator:
             vehicle_poses.append(cur_pose)
             prev_pose = cur_pose
         return vehicle_poses
+
+    def get_lanelet_and_relation_from_vehicle_poses(
+            self,
+            vehicle_poses,
+            max_dist_to_lanelet: float = 0.5,
+    ) -> Tuple[List[List[str]], Dict[str, Dict[str, str]]]:
+        """
+        Returns:
+            List of matching lanelet IDs corresponding to the vehicle poses
+            and their relationship as an adjacency map (dictionary of dictionaries).
+        """
+        lanelet_ids, id2lanelet, ll_relation_mapping = [], {}, {}
+        for vehicle_pose in vehicle_poses:
+            ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
+                vehicle_pose,
+                max_dist_to_lanelet=max_dist_to_lanelet,
+            )
+            cur_pose_ll_ids = []
+            for ll_id, ll_match in ll_mappings.items():
+                cur_pose_ll_ids.append(ll_id)
+                id2lanelet[ll_id] = ll_match.lanelet
+            lanelet_ids.append(cur_pose_ll_ids)
+
+        for u_id, u in id2lanelet.items():
+            for v_id, v in id2lanelet.items():
+                if u_id != v_id:
+                    relation = self.routing_graph.routingRelation(u, v, includeConflicting=True)
+                    ll_relation_mapping.setdefault(u_id, {})[v_id] = relation
+
+        return lanelet_ids, ll_relation_mapping
 
     def get_matching_lanelets_from_vehicle_poses(
             self,
