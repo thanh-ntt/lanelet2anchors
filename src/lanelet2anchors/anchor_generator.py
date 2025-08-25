@@ -292,14 +292,14 @@ class AnchorGenerator:
             self,
             vehicle_poses,
             max_dist_to_lanelet: float = 0.5,
-    ) -> Tuple[List[List[str]], List[List], Dict[str, Dict[str, str]]]:
+    ) -> Tuple[List[List[str]], List[List[Lanelet]], Dict[str, Dict[str, str]]]:
         """
         Returns:
             List of matching lanelet IDs corresponding to the vehicle poses
             and list of matching lanelets
             and their relationship as an adjacency map (dictionary of dictionaries).
         """
-        lanelet_ids, id2lanelet, ll_relation_mapping = [], {}, {}
+        lanelet_ids, id2lanelet, relations = [], {}, {}
         for vehicle_pose in vehicle_poses:
             ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose,
@@ -313,13 +313,16 @@ class AnchorGenerator:
 
         for u_id, u in id2lanelet.items():
             for v_id, v in id2lanelet.items():
-                if u_id != v_id:
-                    relation = self.routing_graph.routingRelation(u, v, includeConflicting=True)
-                    ll_relation_mapping.setdefault(u_id, {})[v_id] = relation
+                if u_id == v_id:
+                    rel = 'Self'
+                else:
+                    rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
+                    rel = str(rel).split('.')[-1]
+                relations.setdefault(u_id, {})[v_id] = rel
 
-        lanelets = [[id2lanelet[ll_id] for ll_id in pose_lanelets] for pose_lanelets in lanelet_ids]
+        lanelets = [[id2lanelet[ll_id] for ll_id in per_step_lls] for per_step_lls in lanelet_ids]
 
-        return lanelet_ids, lanelets, ll_relation_mapping
+        return lanelet_ids, lanelets, relations
 
     def get_matching_lanelets_from_vehicle_poses(
             self,
