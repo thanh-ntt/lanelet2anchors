@@ -316,6 +316,7 @@ class AnchorGenerator:
                 id2lanelet[ll_id] = ll_match.lanelet
             lanelet_ids.append(cur_pose_ll_ids)
 
+        assert len(lanelet_ids) == len(vehicle_poses) > 0
         if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
             for ll_id, lanelet in id2lanelet.items():
                 print(f'{ll_id}: {lanelet}')
