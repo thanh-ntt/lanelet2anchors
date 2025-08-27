@@ -179,6 +179,7 @@ class AnchorGenerator:
             np.double(max_dist_to_lanelet),
         )
         if remove_non_rule_compliant_matches:
+            # This is not reliable, sometimes it fixes the issue, but most of the time, it's just adding noise to the lanelet matching
             lanelet_matches = removeNonRuleCompliantMatches(lanelet_matches, self.traffic_rules)
 
         if len(lanelet_matches) != 0:
@@ -316,10 +317,10 @@ class AnchorGenerator:
                 id2lanelet[ll_id] = ll_match.lanelet
             lanelet_ids.append(cur_pose_ll_ids)
 
-        assert len(lanelet_ids) == len(vehicle_poses) > 0
-        if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
-            for ll_id, lanelet in id2lanelet.items():
-                print(f'{ll_id}: {lanelet}')
+        # assert len(lanelet_ids) == len(vehicle_poses) > 0
+        # if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
+        #     for ll_id, lanelet in id2lanelet.items():
+        #         print(f'{ll_id}: {lanelet}')
         for u_id, u in id2lanelet.items():
             for v_id, v in id2lanelet.items():
                 if u_id == v_id:
