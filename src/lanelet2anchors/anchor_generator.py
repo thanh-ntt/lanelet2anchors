@@ -318,6 +318,8 @@ class AnchorGenerator:
                 else:
                     rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
                     rel = str(rel).split('.')[-1]
+                    if str(u_id) == '22133' and str(v_id) == '22141':
+                        print(f'Relation: {u_id} -> {v_id}: {rel}')
                 relations.setdefault(u_id, {})[v_id] = rel
 
         lanelets = [[id2lanelet[ll_id] for ll_id in per_step_lls] for per_step_lls in lanelet_ids]
