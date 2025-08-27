@@ -143,7 +143,6 @@ def generate_matched_lanelet_images(
         s_t,
         pred,
         max_dist_to_lanelet=0.5,
-        generate_matched_lanelet_images=False,
 ):
     nusc_root = "/scratch/e0196773/data/nuScenes_trainval_meta_v1.0"
     nusc = NuScenes("v1.0-trainval", dataroot=str(nusc_root))
@@ -160,7 +159,6 @@ def generate_matched_lanelet_images(
         _, matching_lanelets, _ = ll_map.get_lanelet_and_relation_from_vehicle_poses(
             vehicle_poses,
             max_dist_to_lanelet,
-            generate_matched_lanelet_images
         )
         fig, ax = plot_matched_lanelet(ego_info, vehicle_poses, matching_lanelets, nusc_map)
         fig.canvas.draw()
