@@ -316,7 +316,7 @@ class AnchorGenerator:
                 id2lanelet[ll_id] = ll_match.lanelet
             lanelet_ids.append(cur_pose_ll_ids)
 
-        if '18790' in lanelet_ids[0] and '16549' in lanelet_ids[0]:
+        if str(lanelet_ids[0][0]) == '18790':
             for ll_id, lanelet in id2lanelet.items():
                 print(f'{ll_id}: {lanelet}')
         for u_id, u in id2lanelet.items():
