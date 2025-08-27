@@ -5,7 +5,7 @@ from typing import Dict, List, Union, Tuple
 import lanelet2
 import numpy as np
 from lanelet2.io import Origin
-from lanelet2.matching import getDeterministicMatches, getProbabilisticMatches
+from lanelet2.matching import getDeterministicMatches, getProbabilisticMatches, removeNonRuleCompliantMatches
 from lanelet2.projection import UtmProjector
 from shapely.geometry import LineString
 from lanelet2.core import Lanelet
@@ -37,14 +37,14 @@ class AnchorGenerator:
     ) -> None:
         origin = Origin(origin_latitude, origin_longitude)
         projector = UtmProjector(origin)
-        traffic_rules = lanelet2.traffic_rules.create(
+        self.traffic_rules = lanelet2.traffic_rules.create(
             lanelet2.traffic_rules.Locations.Germany,
             lanelet2.traffic_rules.Participants.Vehicle,
         )
 
         self.lanelet_map = lanelet2.io.load(str(osm_file), projector)
         self.routing_graph = lanelet2.routing.RoutingGraph(
-            self.lanelet_map, traffic_rules
+            self.lanelet_map, self.traffic_rules
         )
         self.matching_config: Union[
             LaneletMatchingConfig, LaneletMatchingProbConfig
@@ -161,6 +161,7 @@ class AnchorGenerator:
         self,
         vehicle_pose: VehiclePose,
         max_dist_to_lanelet: float = 0.5,
+        remove_non_rule_compliant_matches: bool = False,
     ) -> Dict[str, LaneletMatchProb]:
         """Match vehicle onto lanelet probabilistically using Lanelet2 Matching.
 
@@ -177,6 +178,8 @@ class AnchorGenerator:
             vehicle_pose.as_object2d_with_covariance(self.matching_config),
             np.double(max_dist_to_lanelet),
         )
+        if remove_non_rule_compliant_matches:
+            lanelet_matches = removeNonRuleCompliantMatches(lanelet_matches, self.traffic_rules)
 
         if len(lanelet_matches) != 0:
             # Compute Matching Probabilities
@@ -292,6 +295,7 @@ class AnchorGenerator:
             self,
             vehicle_poses,
             max_dist_to_lanelet: float = 0.5,
+            remove_non_rule_compliant_matches: bool = False,
     ) -> Tuple[List[List[str]], List[List[Lanelet]], Dict[str, Dict[str, str]]]:
         """
         Returns:
@@ -304,6 +308,7 @@ class AnchorGenerator:
             ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose,
                 max_dist_to_lanelet=max_dist_to_lanelet,
+                remove_non_rule_compliant_matches=remove_non_rule_compliant_matches,
             )
             cur_pose_ll_ids = []
             for ll_id, ll_match in ll_mappings.items():
