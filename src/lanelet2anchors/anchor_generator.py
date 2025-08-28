@@ -316,7 +316,7 @@ class AnchorGenerator:
                 vehicle_pose,
                 max_dist_to_lanelet=max_dist_to_lanelet,
                 remove_non_rule_compliant_matches=remove_non_rule_compliant_matches,
-                debug=debug,
+                debug=False,
             )
             cur_pose_ll_ids = []
             for ll_id, ll_match in ll_mappings.items():
@@ -325,7 +325,9 @@ class AnchorGenerator:
                 set_all_lanelets.add(ll_match.lanelet)
             lanelet_ids.append(cur_pose_ll_ids)
         if debug:
-            print(f'set_all_lanelets: {set_all_lanelets}')
+            print(f'set_all_lanelets:')
+            for ll in set_all_lanelets:
+                print(f'\t{ll}')
 
         # assert len(lanelet_ids) == len(vehicle_poses) > 0
         # if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
