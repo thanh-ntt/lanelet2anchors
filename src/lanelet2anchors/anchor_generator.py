@@ -341,8 +341,17 @@ class AnchorGenerator:
                     rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
                     rel = str(rel).split('.')[-1]
                     if rel == 'None':
+                        # TODO: This seems to work, but does inverting mess up with direction rule
                         rel = self.routing_graph.routingRelation(u, v.invert(), includeConflicting=True)
                         rel = str(rel).split('.')[-1]
+                        if rel == 'None':
+                            # TODO: This seems to work, but does inverting mess up with direction rule
+                            rel = self.routing_graph.routingRelation(u.invert(), v, includeConflicting=True)
+                            rel = str(rel).split('.')[-1]
+                            if rel == 'None':
+                                # TODO: This seems to work, but does inverting mess up with direction rule
+                                rel = self.routing_graph.routingRelation(u.invert(), v.invert(), includeConflicting=True)
+                                rel = str(rel).split('.')[-1]
                 relations.setdefault(u_id, {})[v_id] = rel
 
         # only return lanelets that is matched probabilistically (ids stored in lanelet_ids)
