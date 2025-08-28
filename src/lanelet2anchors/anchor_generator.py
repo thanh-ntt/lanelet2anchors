@@ -340,6 +340,9 @@ class AnchorGenerator:
                 else:
                     rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
                     rel = str(rel).split('.')[-1]
+                    if rel == 'None':
+                        rel = self.routing_graph.routingRelation(u, v.invert(), includeConflicting=True)
+                        rel = str(rel).split('.')[-1]
                 relations.setdefault(u_id, {})[v_id] = rel
 
         # only return lanelets that is matched probabilistically (ids stored in lanelet_ids)
