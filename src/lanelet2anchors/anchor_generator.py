@@ -194,7 +194,9 @@ class AnchorGenerator:
             }
         if self.printed < 5 and 35604 in mapping and 41166 in mapping:
             print(f'match_vehicle_onto_lanelets_probabilistically, mapping:\n{mapping}')
-            print(f'lanelet_matches: {lanelet_matches}')
+            print(f'lanelet_matches:')
+            for ll_match in lanelet_matches:
+                print(f'\t{ll_match.lanelet}')
             self.printed += 1
         return mapping
 
