@@ -316,15 +316,6 @@ class AnchorGenerator:
                 all_lanelets[ll_id] = ll_match.lanelet
             lanelet_ids.append(cur_pose_ll_ids)
 
-            # Add nearby lanelets to the relations for usage in later stage of the pipeline
-            #   e.g: force_match with nearby lanlets
-            nearby_ll_mappings = self.match_vehicle_onto_lanelets_deterministically(
-                vehicle_pose,
-                max_dist_to_lanelet=4.,
-            )
-            for ll_id, ll_match in nearby_ll_mappings.items():
-                all_lanelets[ll_id] = ll_match.lanelet
-
         # assert len(lanelet_ids) == len(vehicle_poses) > 0
         # if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
         #     for ll_id, lanelet in all_lanelets.items():
