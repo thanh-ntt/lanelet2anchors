@@ -304,7 +304,7 @@ class AnchorGenerator:
             and list of matching lanelets
             and their relationship as an adjacency map (dictionary of dictionaries).
         """
-        lanelet_ids, id2lanelet, relations = [], {}, {}
+        lanelet_ids, all_lanelets, relations = [], {}, {}
         for vehicle_pose in vehicle_poses:
             ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose,
@@ -314,15 +314,24 @@ class AnchorGenerator:
             cur_pose_ll_ids = []
             for ll_id, ll_match in ll_mappings.items():
                 cur_pose_ll_ids.append(ll_id)
-                id2lanelet[ll_id] = ll_match.lanelet
+                all_lanelets[ll_id] = ll_match.lanelet
             lanelet_ids.append(cur_pose_ll_ids)
+
+            # Add nearby lanelets to the relations for usage in later stage of the pipeline
+            #   e.g: force_match with nearby lanlets
+            nearby_ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
+                vehicle_pose,
+                max_dist_to_lanelet=4.,
+            )
+            for ll_id, ll_match in nearby_ll_mappings.items():
+                all_lanelets[ll_id] = ll_match.lanelet
 
         # assert len(lanelet_ids) == len(vehicle_poses) > 0
         # if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
-        #     for ll_id, lanelet in id2lanelet.items():
+        #     for ll_id, lanelet in all_lanelets.items():
         #         print(f'{ll_id}: {lanelet}')
-        for u_id, u in id2lanelet.items():
-            for v_id, v in id2lanelet.items():
+        for u_id, u in all_lanelets.items():
+            for v_id, v in all_lanelets.items():
                 if u_id == v_id:
                     rel = 'Self'
                 else:
@@ -330,7 +339,8 @@ class AnchorGenerator:
                     rel = str(rel).split('.')[-1]
                 relations.setdefault(u_id, {})[v_id] = rel
 
-        lanelets = [[id2lanelet[ll_id] for ll_id in per_step_lls] for per_step_lls in lanelet_ids]
+        # only return lanelets that is matched probabilistically (ids stored in lanelet_ids)
+        lanelets = [[all_lanelets[ll_id] for ll_id in per_step_lls] for per_step_lls in lanelet_ids]
 
         return lanelet_ids, lanelets, relations
 
