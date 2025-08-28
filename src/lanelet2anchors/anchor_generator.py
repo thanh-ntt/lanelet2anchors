@@ -301,6 +301,7 @@ class AnchorGenerator:
             vehicle_poses,
             max_dist_to_lanelet: float = 0.5,
             remove_non_rule_compliant_matches: bool = False,
+            debug: bool = False,
     ) -> Tuple[List[List[str]], List[List[Lanelet]], Dict[str, Dict[str, str]]]:
         """
         Returns:
@@ -314,6 +315,7 @@ class AnchorGenerator:
                 vehicle_pose,
                 max_dist_to_lanelet=max_dist_to_lanelet,
                 remove_non_rule_compliant_matches=remove_non_rule_compliant_matches,
+                debug=debug,
             )
             cur_pose_ll_ids = []
             for ll_id, ll_match in ll_mappings.items():
