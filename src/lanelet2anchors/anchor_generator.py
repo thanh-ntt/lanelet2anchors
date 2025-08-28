@@ -193,7 +193,7 @@ class AnchorGenerator:
                 if prob > 0.001
             }
         if debug:
-            print(f'match_vehicle_onto_lanelets_probabilistically, mapping:\n{mapping}')
+            print(f'match_vehicle_onto_lanelets_probabilistically, mapping:')
             for ll_match in mapping.values():
                 print(f'\t{ll_match.lanelet}')
         return mapping
@@ -310,6 +310,7 @@ class AnchorGenerator:
             and their relationship as an adjacency map (dictionary of dictionaries).
         """
         lanelet_ids, all_lanelets, relations = [], {}, {}
+        set_all_lanelets = set()
         for vehicle_pose in vehicle_poses:
             ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
                 vehicle_pose,
@@ -321,7 +322,10 @@ class AnchorGenerator:
             for ll_id, ll_match in ll_mappings.items():
                 cur_pose_ll_ids.append(ll_id)
                 all_lanelets[ll_id] = ll_match.lanelet
+                set_all_lanelets.add(ll_match.lanelet)
             lanelet_ids.append(cur_pose_ll_ids)
+        if debug:
+            print(f'set_all_lanelets: {set_all_lanelets}')
 
         # assert len(lanelet_ids) == len(vehicle_poses) > 0
         # if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
