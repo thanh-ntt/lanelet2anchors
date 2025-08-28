@@ -135,7 +135,6 @@ class AnchorGenerator:
             Dict[str, LaneletMatchProb]: Mapping between lanelet ID and the lanelet match
         """
         mapping = {}
-        print(f'match_vehicle_onto_lanelets_deterministically, max_dist_to_lanelet: {max_dist_to_lanelet}')
         lanelet_matches = getDeterministicMatches(
             self.lanelet_map,
             vehicle_pose.as_object2d(),
@@ -319,7 +318,7 @@ class AnchorGenerator:
 
             # Add nearby lanelets to the relations for usage in later stage of the pipeline
             #   e.g: force_match with nearby lanlets
-            nearby_ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
+            nearby_ll_mappings = self.match_vehicle_onto_lanelets_deterministically(
                 vehicle_pose,
                 max_dist_to_lanelet=4.,
             )
