@@ -49,7 +49,6 @@ class AnchorGenerator:
         self.matching_config: Union[
             LaneletMatchingConfig, LaneletMatchingProbConfig
         ] = LaneletMatchingProbConfig()
-        self.printed = 0
 
     @property
     def lanelet_ids(self) -> List[int]:
@@ -162,6 +161,7 @@ class AnchorGenerator:
         vehicle_pose: VehiclePose,
         max_dist_to_lanelet: float = 0.5,
         remove_non_rule_compliant_matches: bool = False,
+        debug: bool = False,
     ) -> Dict[str, LaneletMatchProb]:
         """Match vehicle onto lanelet probabilistically using Lanelet2 Matching.
 
@@ -192,12 +192,10 @@ class AnchorGenerator:
                 for match, prob in zip(lanelet_matches, probs)
                 if prob > 0.001
             }
-        if self.printed < 5 and 35604 in mapping:
+        if debug:
             print(f'match_vehicle_onto_lanelets_probabilistically, mapping:\n{mapping}')
-            print(f'lanelet_matches:')
-            for ll_match in lanelet_matches:
+            for ll_match in mapping.values():
                 print(f'\t{ll_match.lanelet}')
-            self.printed += 1
         return mapping
 
     def create_anchors_for_vehicle(
