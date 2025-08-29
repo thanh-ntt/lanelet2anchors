@@ -338,20 +338,13 @@ class AnchorGenerator:
                 if u_id == v_id:
                     rel = 'Self'
                 else:
-                    rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
-                    rel = str(rel).split('.')[-1]
-                    if rel == 'None':
-                        # TODO: This seems to work, but does inverting mess up with direction rule
-                        rel = self.routing_graph.routingRelation(u, v.invert(), includeConflicting=True)
+                    for a, b in [(u, v), (u.invert(), v), (u, v.invert()), (u.invert(), v.invert())]:
+                        # This is needed for better matching
+                        # otherwise using (u,v) only results in 26% 'None' relation for 'Successor' lanelets
+                        rel = self.routing_graph.routingRelation(a, b, includeConflicting=True)
                         rel = str(rel).split('.')[-1]
-                        if rel == 'None':
-                            # TODO: This seems to work, but does inverting mess up with direction rule
-                            rel = self.routing_graph.routingRelation(u.invert(), v, includeConflicting=True)
-                            rel = str(rel).split('.')[-1]
-                            if rel == 'None':
-                                # TODO: This seems to work, but does inverting mess up with direction rule
-                                rel = self.routing_graph.routingRelation(u.invert(), v.invert(), includeConflicting=True)
-                                rel = str(rel).split('.')[-1]
+                        if rel != 'None':
+                            break
                 relations.setdefault(u_id, {})[v_id] = rel
 
         # only return lanelets that is matched probabilistically (ids stored in lanelet_ids)
