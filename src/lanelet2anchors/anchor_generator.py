@@ -340,7 +340,8 @@ class AnchorGenerator:
                 if u_id == v_id:
                     rel = 'Self'
                 else:
-                    for a, b in [(u, v), (u.invert(), v), (u, v.invert()), (u.invert(), v.invert())]:
+                    for a, b in [(u, v)]:
+                    # for a, b in [(u, v), (u.invert(), v), (u, v.invert()), (u.invert(), v.invert())]:
                         # This is needed for better matching
                         # otherwise using (u,v) only results in 26% 'None' relation for 'Successor' lanelets
                         rel = self.routing_graph.routingRelation(a, b, includeConflicting=True)
