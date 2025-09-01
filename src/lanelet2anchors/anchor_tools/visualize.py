@@ -156,11 +156,12 @@ def generate_matched_lanelet_images(
     images = []
     for mode in pred:
         vehicle_poses = AnchorGenerator.prediction_to_vehicle_poses(ego_info, mode)
-        _, matching_lanelets, _ = ll_map.get_lanelet_and_relation_from_vehicle_poses(
+        matched_ll_ids, id2ll, _ = ll_map.get_lanelet_and_relation_from_vehicle_poses(
             vehicle_poses,
             max_dist_to_lanelet,
         )
-        fig, ax = plot_matched_lanelet(ego_info, vehicle_poses, matching_lanelets, nusc_map)
+        matched_lanelets = [[id2ll[i] for i in sublist] for sublist in matched_ll_ids]
+        fig, ax = plot_matched_lanelet(ego_info, vehicle_poses, matched_lanelets, nusc_map)
         fig.canvas.draw()
         image_from_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
         image_from_plot = image_from_plot.reshape(fig.canvas.get_width_height()[::-1] + (3,))
