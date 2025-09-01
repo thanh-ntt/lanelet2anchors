@@ -319,12 +319,12 @@ class AnchorGenerator:
             )
             matched_ll_ids.append(list(ll_mappings.keys()))
             all_lanelets.update(ll_mappings.keys())
-        if debug:
-            print(f'set_all_lanelets:')
-            for ll_id in matched_ll_ids:
-                print(f'\t{ll_id} -> {self.lanelet_map.laneletLayer[ll_id]}')
 
         id2ll = {k: self.lanelet_map.laneletLayer[k] for k in all_lanelets}
+        if debug:
+            print(f'all lanelets:')
+            for ll in id2ll.values():
+                print(f'\t{ll}')
 
         relations = {}
         for u_id, u in id2ll.items():
