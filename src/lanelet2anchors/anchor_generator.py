@@ -327,8 +327,8 @@ class AnchorGenerator:
         id2ll = {k: self.lanelet_map.laneletLayer[k] for k in all_lanelets}
 
         relations = {}
-        for u, u_id in id2ll.items():
-            for v, v_id in id2ll.items():
+        for u_id, u in id2ll.items():
+            for v_id, v in id2ll.items():
                 if u_id == v_id:
                     rel = 'Self'
                 else:
