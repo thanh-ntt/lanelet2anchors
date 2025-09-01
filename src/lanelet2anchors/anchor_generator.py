@@ -329,7 +329,7 @@ class AnchorGenerator:
         relations = {}
         for u, u_id in id2ll.items():
             for v, v_id in id2ll.items():
-                if u_id == u_id:
+                if u_id == v_id:
                     rel = 'Self'
                 else:
                     rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
