@@ -321,8 +321,10 @@ class AnchorGenerator:
             cur_pose_ll_ids = []
             for ll_id, ll_match in ll_mappings.items():
                 cur_pose_ll_ids.append(ll_id)
-                all_lanelets[ll_id] = ll_match.lanelet
-                set_all_lanelets.add(ll_match.lanelet)
+                # lanelet = ll_match.lanelet
+                lanelet = self.lanelet_map.laneletLayer[ll_id]
+                all_lanelets[ll_id] = lanelet
+                set_all_lanelets.add(lanelet)
             lanelet_ids.append(cur_pose_ll_ids)
         if debug:
             print(f'set_all_lanelets:')
