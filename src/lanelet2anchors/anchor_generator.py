@@ -162,7 +162,7 @@ class AnchorGenerator:
         max_dist_to_lanelet: float = 0.5,
         remove_non_rule_compliant_matches: bool = False,
         debug: bool = False,
-    ) -> Dict[str, LaneletMatchProb]:
+    ) -> Dict[int, LaneletMatchProb]:
         """Match vehicle onto lanelet probabilistically using Lanelet2 Matching.
 
         Args:
@@ -302,58 +302,41 @@ class AnchorGenerator:
             max_dist_to_lanelet: float = 0.5,
             remove_non_rule_compliant_matches: bool = False,
             debug: bool = False,
-    ) -> Tuple[List[List[str]], List[List[Lanelet]], Dict[str, Dict[str, str]]]:
+    ) -> Tuple[List[List[int]], Dict[int, Lanelet], Dict[int, Dict[int, str]]]:
         """
         Returns:
             List of matching lanelet IDs corresponding to the vehicle poses
-            and list of matching lanelets
+            and mapping from id to actual lanelet
             and their relationship as an adjacency map (dictionary of dictionaries).
         """
-        lanelet_ids, all_lanelets, relations = [], {}, {}
-        set_all_lanelets = set()
-        for vehicle_pose in vehicle_poses:
+        matched_ll_ids, all_lanelets = [], set()
+        for pose in vehicle_poses:
             ll_mappings = self.match_vehicle_onto_lanelets_probabilistically(
-                vehicle_pose,
+                pose,
                 max_dist_to_lanelet=max_dist_to_lanelet,
                 remove_non_rule_compliant_matches=remove_non_rule_compliant_matches,
                 debug=False,
             )
-            cur_pose_ll_ids = []
-            for ll_id, ll_match in ll_mappings.items():
-                cur_pose_ll_ids.append(ll_id)
-                # lanelet = ll_match.lanelet
-                lanelet = self.lanelet_map.laneletLayer[ll_id]
-                all_lanelets[ll_id] = lanelet
-                set_all_lanelets.add(lanelet)
-            lanelet_ids.append(cur_pose_ll_ids)
+            matched_ll_ids.append(list(ll_mappings.keys()))
+            all_lanelets.update(ll_mappings.keys())
         if debug:
             print(f'set_all_lanelets:')
-            for ll in set_all_lanelets:
-                print(f'\t{ll}')
+            for ll_id in matched_ll_ids:
+                print(f'\t{ll_id} -> {self.lanelet_map.laneletLayer[ll_id]}')
 
-        # assert len(lanelet_ids) == len(vehicle_poses) > 0
-        # if len(lanelet_ids[0]) > 0 and str(lanelet_ids[0][0]) == '18790':
-        #     for ll_id, lanelet in all_lanelets.items():
-        #         print(f'{ll_id}: {lanelet}')
-        for u_id, u in all_lanelets.items():
-            for v_id, v in all_lanelets.items():
-                if u_id == v_id:
+        id2ll = {k: self.lanelet_map.laneletLayer[k] for k in all_lanelets}
+
+        relations = {}
+        for u, u_id in id2ll.items():
+            for v, v_id in id2ll.items():
+                if u_id == u_id:
                     rel = 'Self'
                 else:
-                    for a, b in [(u, v)]:
-                    # for a, b in [(u, v), (u.invert(), v), (u, v.invert()), (u.invert(), v.invert())]:
-                        # This is needed for better matching
-                        # otherwise using (u,v) only results in 26% 'None' relation for 'Successor' lanelets
-                        rel = self.routing_graph.routingRelation(a, b, includeConflicting=True)
-                        rel = str(rel).split('.')[-1]
-                        if rel != 'None':
-                            break
+                    rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
+                    rel = str(rel).split('.')[-1]
                 relations.setdefault(u_id, {})[v_id] = rel
 
-        # only return lanelets that is matched probabilistically (ids stored in lanelet_ids)
-        lanelets = [[all_lanelets[ll_id] for ll_id in per_step_lls] for per_step_lls in lanelet_ids]
-
-        return lanelet_ids, lanelets, relations
+        return matched_ll_ids, id2ll, relations
 
     def get_matching_lanelets_from_vehicle_poses(
             self,
