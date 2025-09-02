@@ -334,12 +334,28 @@ class AnchorGenerator:
 
         return reachable_lanelets
 
+    def get_relation(self, u: Lanelet, v: Lanelet, extra_relation: bool) -> str:
+        if u.id == v.id:
+            return 'Self'
+
+        rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
+        rel = str(rel).split('.')[-1]
+
+        if extra_relation and rel == 'None':
+            # Attempt to get useful extra relationship
+            shortest_path = self.routing_graph.shortestPath(u, v)
+            if {u.id, v.id} == {41461, 36886}:
+                print(f'shortest_path {u.id} -> {v.id}: {shortest_path}')
+
+        return rel
+
     def get_lanelet_and_relation_from_vehicle_poses(
             self,
             vehicle_poses,
             max_dist_to_lanelet: float = 0.5,
             remove_non_rule_compliant_matches: bool = False,
             debug: bool = False,
+            extra_relation: bool = False,
     ) -> Tuple[List[List[int]], Dict[int, Lanelet], Dict[int, Dict[int, str]]]:
         """
         Returns:
@@ -367,12 +383,7 @@ class AnchorGenerator:
         relations = {}
         for u_id, u in id2ll.items():
             for v_id, v in id2ll.items():
-                if u_id == v_id:
-                    rel = 'Self'
-                else:
-                    rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
-                    rel = str(rel).split('.')[-1]
-                relations.setdefault(u_id, {})[v_id] = rel
+                relations.setdefault(u_id, {})[v_id] = self.get_relation(u, v, extra_relation)
 
         return matched_ll_ids, id2ll, relations
 
