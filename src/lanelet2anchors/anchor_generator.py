@@ -348,7 +348,7 @@ class AnchorGenerator:
             # Attempt to get useful extra relationship
             shortest_path = self.routing_graph.shortestPath(u, v, 0)  # distance-based shortest path (https://github.com/fzi-forschungszentrum-informatik/Lanelet2/issues/85)
             # reachable_set = self.routing_graph.reachableSet(u, 100, 0)
-            if len(shortest_path) == 3: # [u, x, v]
+            if shortest_path is not None and len(shortest_path) == 3: # [u, x, v]
                 rel = 'Skip1'
 
         self.rel_cache.setdefault(u.id, {})[v.id] = rel
