@@ -49,6 +49,7 @@ class AnchorGenerator:
         self.matching_config: Union[
             LaneletMatchingConfig, LaneletMatchingProbConfig
         ] = LaneletMatchingProbConfig()
+        self.rel_cache = {}
 
     @property
     def lanelet_ids(self) -> List[int]:
@@ -337,6 +338,8 @@ class AnchorGenerator:
     def get_relation(self, u: Lanelet, v: Lanelet, extra_relation: bool) -> str:
         if u.id == v.id:
             return 'Self'
+        if u.id in self.rel_cache and v.id in self.rel_cache[u.id]:
+            return self.rel_cache[u.id][v.id]
 
         rel = self.routing_graph.routingRelation(u, v, includeConflicting=True)
         rel = str(rel).split('.')[-1]
@@ -345,8 +348,11 @@ class AnchorGenerator:
             # Attempt to get useful extra relationship
             shortest_path = self.routing_graph.shortestPath(u, v)
             if {u.id, v.id} == {41461, 36886}:
-                print(f'shortest_path {u.id} -> {v.id}: {shortest_path}')
+                print(f'shortest_path {u.id} -> {v.id}:')
+                for ll in shortest_path:
+                    print(f'\t{ll}')
 
+        self.rel_cache.setdefault(u.id, {})[v.id] = rel
         return rel
 
     def get_lanelet_and_relation_from_vehicle_poses(
