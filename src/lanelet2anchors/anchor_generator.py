@@ -191,7 +191,7 @@ class AnchorGenerator:
             mapping = {
                 match.lanelet.id: LaneletMatchProb(match, prob)
                 for match, prob in zip(lanelet_matches, probs)
-                if prob > 0.0001
+                if prob > 0.001
             }
         if debug:
             print(f'match_vehicle_onto_lanelets_probabilistically, mapping:')
