@@ -346,7 +346,7 @@ class AnchorGenerator:
 
         if extra_relation and rel == 'None':
             # Attempt to get useful extra relationship
-            shortest_path = self.routing_graph.shortestPath(u, v)
+            shortest_path = self.routing_graph.shortestPath(u, v, 0)
             reachable_set = self.routing_graph.reachableSet(u, 100, 0)
             if {u.id, v.id} == {41461, 36886}:
                 print(f'shortest_path {u.id} -> {v.id}:')
