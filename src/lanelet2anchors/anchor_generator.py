@@ -296,6 +296,44 @@ class AnchorGenerator:
             prev_pose = cur_pose
         return vehicle_poses
 
+    def get_reachable_lanelets_for_vehicle(
+            self,
+            vehicle_pose: VehiclePose,
+            max_length: float = 100,
+            probabilitisc_matching: bool = True,
+            max_dist_to_lanelet: float = 0.5,
+    ) -> List[List[Lanelet]]:
+        """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
+
+        Args:
+            vehicle_pose (VehiclePose): Position and orientation of the considered vehicle
+            max_length (float, optional): Desired length of the anchor in meters. Start lanelet is NOT included. Note: Anchors can have a length shorter than length, if there is a dead end. Defaults to 100.
+            probabilitisc_matching (bool, optional): Whether the matching of the vehicle onto the Lanelet is probabilistic or deterministic. Defaults to True.
+            max_dist_to_lanelet (float, optional): Euclidean distance to which we find lanelets
+
+        Returns:
+            List[List[Lanelet]]: List of reachable lanelets for each matching starting Lanelet (according to vehicle_pose)
+        """
+        if probabilitisc_matching:
+            lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
+                vehicle_pose,
+                max_dist_to_lanelet
+            )
+        else:
+            lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
+                vehicle_pose,
+                max_dist_to_lanelet
+            )
+
+        # Find all reachable lanelets from each of the match (regardless of probability)
+        reachable_lanelets = []
+        for ll_id in lanelet_matches.keys():
+            reachable_lanelets.append(
+                self.get_reachable_lanelets_from(lanelet_id=int(ll_id), max_length=max_length)
+            )
+
+        return reachable_lanelets
+
     def get_lanelet_and_relation_from_vehicle_poses(
             self,
             vehicle_poses,
@@ -338,138 +376,3 @@ class AnchorGenerator:
 
         return matched_ll_ids, id2ll, relations
 
-    def get_matching_lanelets_from_vehicle_poses(
-            self,
-            vehicle_poses,
-            max_dist_to_lanelet: float = 0.5,
-    ) -> List[List[LaneletMatchProb]]:
-        assert len(vehicle_poses) == 13
-        matching_lanelets = []
-        for vehicle_pose in vehicle_poses:
-            cur_pose_matched_lanelet = self.match_vehicle_onto_lanelets_probabilistically(
-                vehicle_pose,
-                max_dist_to_lanelet=max_dist_to_lanelet,
-            )
-            matching_lanelets.append(list(cur_pose_matched_lanelet.values()))
-        return matching_lanelets
-
-    def get_lanelet_relations_from_lanelets(
-            self,
-            lanelets: List[List[LaneletMatchProb]],
-    ):
-        lanelet_relations = []
-        for i in range(1, len(lanelets)):
-            cur_lanelet_relations = []
-            for prev_lanelet in lanelets[i - 1]:
-                for cur_lanelet in lanelets[i]:
-                    if cur_lanelet.lanelet.id == prev_lanelet.lanelet.id:
-                        lanelet_relation = 'self'
-                    else:
-                        lanelet_relation = self.routing_graph.routingRelation(
-                            prev_lanelet.lanelet, cur_lanelet.lanelet, includeConflicting=True
-                        )
-                    cur_lanelet_relations.append(lanelet_relation)
-            lanelet_relations.append(cur_lanelet_relations)
-        return lanelet_relations
-
-    def check_rules_for_prediction(
-            self,
-            initial_position,
-            prediction,
-            rules: List[str]
-    ):
-        """Check for each rule in the list
-
-        Args:
-
-        Returns:
-            Dict[str, List[float]]: mapping from each rule to a list of values corresponding
-            to the rule violation level of each vehicle pose (waypoint).
-        """
-        vehicle_poses = self.prediction_to_vehicle_poses(prediction) # TODO: weighted vehicle poses based on prob
-        prediction_lanelets = []
-        for vehicle_pose in vehicle_poses:
-            matching_lanelets = self.match_vehicle_onto_lanelets_probabilistically(
-                vehicle_pose,
-                max_dist_to_lanelet = 0.5,
-            )
-            prediction_lanelets.append(list(matching_lanelets.values()))
-
-        assert len(prediction_lanelets) == 12 # predicts next 6s (12 frames)
-        rule_violations = {
-            'lane_direction': [],
-            'off_road': [],
-            'lane_change': [],
-        }
-        lanelet_relations = []
-        for i in range(len(prediction_lanelets)):
-            rule_violation = {
-                'lane_direction': 0,
-                'off_road': 0,
-                'lane_change': 0
-            }
-            prev_lanelets = prediction_lanelets[i - 1] if i > 0 else initial_position
-            cur_lanelets = prediction_lanelets[i]
-            num_permutations = len(prev_lanelets) * len(cur_lanelets)
-            if num_permutations == 0:
-                rule_violation['off_road'] = 1.0
-            cur_lanelet_relations = []
-            for prev_lanelet in prev_lanelets:
-                for cur_lanelet in cur_lanelets:
-                    lanelet_relation = self.routing_graph.routingRelation(
-                        prev_lanelet.lanelet, cur_lanelet.lanelet, includeConflicting=True
-                    )
-                    cur_lanelet_relations.append(lanelet_relation)
-            lanelet_relations.append(cur_lanelet_relations)
-        print(f'lanelet relations: {lanelet_relations}')
-        pass
-
-        # TODO:
-        # Find all matching lanelets for each waypoint (with probability)
-        # Check rules for [prev_lanelet, cur_lanelet] for each permutation, if violate, value = 1.0
-        #   => (if 2+ lanelets) take weighted sum of all permutation (using probability of the matching lanelet)
-        #   => rule violation level
-        #
-        #   3 cases:
-        #       no cur_lanelet => rule_1 = 0.0, rule_2 = 1.0, rule_3 = 0.0
-        #       [prev_lanelet, cur_lanelet] not neighbor <= TODO: check neighborhood relationship
-
-        # TODO #2: check rule for all 5 predictions
-
-    def get_reachable_lanelets_for_vehicle(
-            self,
-            vehicle_pose: VehiclePose,
-            max_length: float = 100,
-            probabilitisc_matching: bool = True,
-            max_dist_to_lanelet: float = 0.5,
-    ) -> List[List[Lanelet]]:
-        """Compute diverse map based anchor paths by first matching the vehicle onto the Lanelet map and subsequently generating and filtering anchor paths.
-
-        Args:
-            vehicle_pose (VehiclePose): Position and orientation of the considered vehicle
-            max_length (float, optional): Desired length of the anchor in meters. Start lanelet is NOT included. Note: Anchors can have a length shorter than length, if there is a dead end. Defaults to 100.
-            probabilitisc_matching (bool, optional): Whether the matching of the vehicle onto the Lanelet is probabilistic or deterministic. Defaults to True.
-            max_dist_to_lanelet (float, optional): Euclidean distance to which we find lanelets
-
-        Returns:
-            List[List[Lanelet]]: List of reachable lanelets for each matching starting Lanelet (according to vehicle_pose)
-        """
-        if probabilitisc_matching:
-            lanelet_matches = self.match_vehicle_onto_lanelets_probabilistically(
-                vehicle_pose,
-                max_dist_to_lanelet
-            )
-        else:
-            lanelet_matches = self.match_vehicle_onto_lanelets_deterministically(
-                vehicle_pose,
-                max_dist_to_lanelet
-            )
-
-        # Find all reachable lanelets from each of the match (regardless of probability)
-        reachable_lanelets = []
-        for ll_id in lanelet_matches.keys():
-            reachable_lanelets.append(
-                self.get_reachable_lanelets_from(lanelet_id=int(ll_id), max_length=max_length)
-            )
-
-        return reachable_lanelets
